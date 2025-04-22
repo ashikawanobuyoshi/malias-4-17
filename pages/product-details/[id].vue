@@ -256,11 +256,12 @@ const submitOrder = async () => {
   await sendEmail(orderDetails);
 };
 
-// 管理者のメールアドレスを指定
+
 // 管理者のメールアドレスを指定
 const ADMIN_EMAILS = [
   "studiomalia1@gmail.com",
-  "info@syashin8.com"
+  "info@syashin8.com",
+  "noreply@kuroco-mail.app"
 ];
 
 if (ADMIN_EMAILS.includes(user.email)) {
