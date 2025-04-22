@@ -257,10 +257,18 @@ const submitOrder = async () => {
 };
 
 // 管理者のメールアドレスを指定
+// 管理者のメールアドレスを指定
 const ADMIN_EMAILS = [
   "studiomalia1@gmail.com",
   "info@syashin8.com"
 ];
+
+if (ADMIN_EMAILS.includes(user.email)) {
+  console.log("管理者としてログインしています");
+  showAdminDashboard(); // 管理者ダッシュボードを表示
+}
+
+
 
 const sendEmail = async (orderDetails: any) => {
   try {
