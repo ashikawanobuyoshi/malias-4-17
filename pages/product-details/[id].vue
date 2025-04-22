@@ -272,13 +272,15 @@ if (ADMIN_EMAILS.includes(user.email)) {
 
 const sendEmail = async (orderDetails: any) => {
   try {
-    const recipients = [orderDetails.address, ADMIN_EMAIL]; // 注文者＋管理者へ送信
+    // 注文者とすべての管理者にメールを送信
+    const recipients = [orderDetails.address, ...ADMIN_EMAILS];
+    console.log("送信先:", recipients);
     for (const recipient of recipients) {
       await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          to: recipient, 
+          to: recipient,
           subject: `【注文確定】${orderDetails.customerName}様のご注文について`,
           body: `
 ${orderDetails.customerName}様
@@ -288,16 +290,16 @@ ${orderDetails.customerName}様
 
 【ご注文内容】
 ---------------------------------
-${orderDetails.items.map(item => 
+${orderDetails.items.map(item =>
   `画像名: ${item.fileName}
-  プリント種: ${item.selectedType}
-  数量: ${item.quantity}枚
-  金額: ${calculatePrice(item.selectedType, item.quantity)} 円`
+プリント種: ${item.selectedType}
+数量: ${item.quantity}枚
+金額: ${calculatePrice(item.selectedType, item.quantity)} 円`
 ).join("\n---------------------------------\n")}
 
 【合計金額】 ${orderDetails.total} 円
 
-【備考】 
+【備考】
 ${orderDetails.comment}
 
 ---------------------------------
@@ -310,7 +312,7 @@ ${orderDetails.comment}
 今後ともよろしくお願いいたします。
 
 敬具
-`,
+          `,
         }),
       });
     }
