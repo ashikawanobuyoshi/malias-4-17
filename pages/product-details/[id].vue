@@ -17,7 +17,7 @@
           :key="index"
           class="favorite-item"
         >
-          <img :src="favImg.url" alt="Favorite Image" />
+          <img :src="favImg.url || '/images/no-image.png'" alt="Favorite Image" />
           <div class="fav-image-name">{{ favImg.fileName }}</div>
           <!-- プリント種類選択のドロップダウン -->
           <select v-model="favImg.selectedType">
@@ -165,7 +165,7 @@ const products = [
     src: '/option-images/print/printo_nomi.jpg',
     productName: 'プリント',
     description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 205㎜×254㎜\nキャビネプリント 180㎜×127㎜\n手札プリント 127㎜×89㎜\n\n料金\n四切りプリント 5800 円（6380 円 税込）\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
-    // description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 205㎜×254㎜\nキャビネプリント 180㎜×127㎜\n手札プリント 127㎜×89㎜\n\n料金\n四切りプリント 5800 円（6380 円 税込）\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
+    // description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
     price: ''
   },
   {
@@ -182,6 +182,7 @@ const products = [
 
 //  
 const plainProduct = computed(() => {
+  if (!productId || isNaN(productId)) return null;
   const found = products.find(p => p.id === productId)
   return found ? { ...found } : null
 })
@@ -235,24 +236,81 @@ const totalPrice = computed(() => {
   }, 0)
 })
 
-// 受注フォーム用のデータ
+// 注文確定処理の修正
 const customerName = ref('')
 const address = ref('')
 const comment = ref('')
 
-// 注文確定処理
-const submitOrder = () => {
+const submitOrder = async () => {
   const orderDetails = {
     customerName: customerName.value,
     address: address.value,
     comment: comment.value,
     items: orderItems.value,
     total: totalPrice.value,
+  };
+
+  console.log("注文内容:", orderDetails);
+  alert("注文が確定されました！");
+
+  await sendEmail(orderDetails);
+};
+
+// 管理者のメールアドレスを指定
+const ADMIN_EMAILS = [
+  "studiomalia1@gmail.com",
+  "info@syashin8.com"
+];
+
+const sendEmail = async (orderDetails: any) => {
+  try {
+    const recipients = [orderDetails.address, ADMIN_EMAIL]; // 注文者＋管理者へ送信
+    for (const recipient of recipients) {
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: recipient, 
+          subject: `【注文確定】${orderDetails.customerName}様のご注文について`,
+          body: `
+${orderDetails.customerName}様
+
+この度はご注文いただき、誠にありがとうございます。
+以下の内容で注文が確定いたしましたので、ご確認ください。
+
+【ご注文内容】
+---------------------------------
+${orderDetails.items.map(item => 
+  `画像名: ${item.fileName}
+  プリント種: ${item.selectedType}
+  数量: ${item.quantity}枚
+  金額: ${calculatePrice(item.selectedType, item.quantity)} 円`
+).join("\n---------------------------------\n")}
+
+【合計金額】 ${orderDetails.total} 円
+
+【備考】 
+${orderDetails.comment}
+
+---------------------------------
+
+ご注文内容に誤りがございましたら、お早めにご連絡ください。
+また、発送準備が整い次第、改めてご連絡いたします。
+
+何かご不明点などございましたら、お気軽にお問い合わせください。
+
+今後ともよろしくお願いいたします。
+
+敬具
+`,
+        }),
+      });
+    }
+    console.log("注文確認メールを送信しました");
+  } catch (error) {
+    console.error("メール送信に失敗しました:", error);
   }
-  console.log("注文内容:", orderDetails)
-  alert("注文が確定されました！")
-  // 必要に応じてフォームリセットやサーバ送信処理を追加します
-}
+};
 
 // 戻るボタンの処理（Vue Router を使用）
 const router = useRouter()
