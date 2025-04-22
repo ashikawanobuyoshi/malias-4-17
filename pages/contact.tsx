@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Controller, useForm, UseFormRegister } from 'react-hook-form';
-import useRequireAuth from '../lib/use-require-auth';
+import useRequireAuth from '../pages/use-require-auth';
 
 type Form = {
   cols: {
