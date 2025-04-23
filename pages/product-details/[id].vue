@@ -253,33 +253,11 @@ const submitOrder = async () => {
   console.log("注文内容:", orderDetails);
   alert("注文が確定されました！");
 
+  // await sendEmail(orderDetails); // sendEmail関数の呼び出しをコメントアウト
+
+  // Kurocoへの送信処理をsendEmail関数に移動
   await sendEmail(orderDetails);
 };
-
-// Kurocoに送信する関数
- try {
-    const response = await fetch('https://api.kuroco.app/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `AIzaSyDA5qDSvoqCba8k3Syxr-qpgTipDVsx75`
-      },
-      body: JSON.stringify(orderDetails),
-    });
-
-    if (!response.ok) {
-      throw new Error(`注文データの送信に失敗しました（ステータス: ${response.status}）`);
-    }
-
-    const data = await response.json();
-    console.log("注文内容がKurocoへ送信されました:", data);
-    alert("注文がKurocoに正常に送信されました！");
-  } catch (error) {
-    console.error("注文送信エラー:", error);
-    alert("注文の送信に問題が発生しました。もう一度お試しください。");
-  }
-};
-
 
 // 管理者のメールアドレスを指定
 const ADMIN_EMAILS = [
@@ -288,71 +266,46 @@ const ADMIN_EMAILS = [
   "noreply@kuroco-mail.app"
 ];
 
-if (ADMIN_EMAILS.includes(user.email)) {
-  console.log("管理者としてログインしています");
-  showAdminDashboard(); // 管理者ダッシュボードを表示
-}
-
-
-
 const sendEmail = async (orderDetails: any) => {
   try {
     // 注文者と全ての管理者にメールを送信
     const recipients = [orderDetails.address, ...ADMIN_EMAILS];
     console.log("送信先:", recipients);
 
-    for (const recipient of recipients) {
-      await fetch('/api/send-email', {
+    // Kurocoへの送信
+    try {
+      const response = await fetch('https://api.kuroco.app/v1/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: recipient,
-          subject: `【注文確定】${orderDetails.customerName}様のご注文について`,
-          body: `
-${orderDetails.customerName}様
-
-この度はご注文いただき、誠にありがとうございます。
-以下の内容で注文が確定いたしましたので、ご確認ください。
-
-【ご注文内容】
----------------------------------
-${orderDetails.items
-  .map(
-    (item: any) =>
-      `画像名: ${item.fileName}
-プリント種: ${item.selectedType}
-数量: ${item.quantity} 枚
-金額: ${calculatePrice(item.selectedType, item.quantity)} 円`
-  )
-  .join("\n---------------------------------\n")}
----------------------------------
-
-【合計金額】 ${orderDetails.total} 円
-
-【備考】
-${orderDetails.comment}
-
----------------------------------
-
-ご注文内容に誤りがございましたら、お早めにご連絡ください。
-発送準備が整い次第、改めてご連絡いたします。
-
-何かご不明点がございましたら、お気軽にお問い合わせください。
-
-今後ともよろしくお願いいたします。
-
-敬具 
-          `,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `AIzaSyDA5qDSvoqCba8k3Syxr-qpgTipDVsx75` // APIキーを環境変数から取得することを推奨
+        },
+        body: JSON.stringify(orderDetails),
       });
+
+      if (!response.ok) {
+        throw new Error(`注文データの送信に失敗しました（ステータス: ${response.status}）`);
+      }
+
+      const data = await response.json();
+      console.log("注文内容がKurocoへ送信されました:", data);
+      alert("注文がKurocoに正常に送信されました！");
+    } catch (kurocoError) {
+      console.error("Kurocoへの注文送信エラー:", kurocoError);
+      alert("Kurocoへの注文の送信に問題が発生しました。もう一度お試しください。");
+      return; // Kurocoへの送信が失敗したら、メール送信を中止
     }
-    console.log("注文確認メールを全て送信しました");
-    // ここでメール送信終了通知を実施
-    alert("全てのメール送信が完了しました！");
+
   } catch (error) {
     console.error("メール送信に失敗しました:", error);
+    alert("メールの送信に問題が発生しました。もう一度お試しください。");
   }
 };
+
+if (ADMIN_EMAILS.includes(user.email)) {
+  console.log("管理者としてログインしています");
+  showAdminDashboard(); // 管理者ダッシュボードを表示
+}
 
 // 戻るボタンの処理（Vue Router を使用）
 const router = useRouter()
