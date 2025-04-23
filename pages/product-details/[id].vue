@@ -256,6 +256,30 @@ const submitOrder = async () => {
   await sendEmail(orderDetails);
 };
 
+// Kurocoに送信する関数
+ try {
+    const response = await fetch('https://api.kuroco.app/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `AIzaSyDA5qDSvoqCba8k3Syxr-qpgTipDVsx75`
+      },
+      body: JSON.stringify(orderDetails),
+    });
+
+    if (!response.ok) {
+      throw new Error(`注文データの送信に失敗しました（ステータス: ${response.status}）`);
+    }
+
+    const data = await response.json();
+    console.log("注文内容がKurocoへ送信されました:", data);
+    alert("注文がKurocoに正常に送信されました！");
+  } catch (error) {
+    console.error("注文送信エラー:", error);
+    alert("注文の送信に問題が発生しました。もう一度お試しください。");
+  }
+};
+
 
 // 管理者のメールアドレスを指定
 const ADMIN_EMAILS = [
@@ -273,9 +297,10 @@ if (ADMIN_EMAILS.includes(user.email)) {
 
 const sendEmail = async (orderDetails: any) => {
   try {
-    // 注文者とすべての管理者にメールを送信
+    // 注文者と全ての管理者にメールを送信
     const recipients = [orderDetails.address, ...ADMIN_EMAILS];
     console.log("送信先:", recipients);
+
     for (const recipient of recipients) {
       await fetch('/api/send-email', {
         method: 'POST',
@@ -291,12 +316,16 @@ ${orderDetails.customerName}様
 
 【ご注文内容】
 ---------------------------------
-${orderDetails.items.map(item =>
-  `画像名: ${item.fileName}
+${orderDetails.items
+  .map(
+    (item: any) =>
+      `画像名: ${item.fileName}
 プリント種: ${item.selectedType}
-数量: ${item.quantity}枚
+数量: ${item.quantity} 枚
 金額: ${calculatePrice(item.selectedType, item.quantity)} 円`
-).join("\n---------------------------------\n")}
+  )
+  .join("\n---------------------------------\n")}
+---------------------------------
 
 【合計金額】 ${orderDetails.total} 円
 
@@ -306,18 +335,20 @@ ${orderDetails.comment}
 ---------------------------------
 
 ご注文内容に誤りがございましたら、お早めにご連絡ください。
-また、発送準備が整い次第、改めてご連絡いたします。
+発送準備が整い次第、改めてご連絡いたします。
 
-何かご不明点などございましたら、お気軽にお問い合わせください。
+何かご不明点がございましたら、お気軽にお問い合わせください。
 
 今後ともよろしくお願いいたします。
 
-敬具
+敬具 
           `,
         }),
       });
     }
-    console.log("注文確認メールを送信しました");
+    console.log("注文確認メールを全て送信しました");
+    // ここでメール送信終了通知を実施
+    alert("全てのメール送信が完了しました！");
   } catch (error) {
     console.error("メール送信に失敗しました:", error);
   }
