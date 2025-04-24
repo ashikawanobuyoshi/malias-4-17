@@ -231,7 +231,8 @@ const sendEmail = async (orderDetails: any) => {
     })
 
     if (!response.ok) {
-      throw new Error(`Kuroco送信失敗（${response.status}）`)
+      const errorText = await response.text(); // エラー内容をテキストで取得
+      throw new Error(`Kuroco送信失敗（${response.status}）：${errorText}`);
     }
 
     const data = await response.json()
@@ -239,7 +240,7 @@ const sendEmail = async (orderDetails: any) => {
     alert("注文が正常に送信されました！")
   } catch (error) {
     console.error("送信エラー:", error)
-    alert("送信に失敗しました。もう一度お試しください。")
+    alert(`送信に失敗しました。もう一度お試しください。\n詳細: ${error}`); // エラー詳細をアラートに表示
   }
 }
 
