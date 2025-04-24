@@ -313,18 +313,22 @@ const sendEmail = async (orderDetails: any) => {
   }
 };
 
-const showAdminDashboard = () => {
-  console.log('管理者ダッシュボードを表示します');
-  // ダッシュボードを表示する処理を記述してください
-};
+// 管理者判定用
+const isAdmin = ref(false)
+const x = ['studiomalia1@gmail.com', 'admin@example.com'] // 管理者のメールアドレス一覧
 
 const user = {
-  email: 'studiomalia1@gmail.com'際のメールアドレスに置き換えてください
+  email: 'studiomalia1@gmail.com' // ←実際のメールアドレスに変更してください
 };
 
-if (ADMIN_EMAILS.includes(user.email)) {
-  console.log("管理者としてログインしています");
-  showAdminDashboard(); // 管理者ダッシュボードを表示
+x.includes(user.email) && (
+  console.log("管理者としてログインしています"),
+  isAdmin.value = true
+)
+
+const showAdminDashboard = () => {
+  console.log('管理者ダッシュボードを表示します')
+  // ダッシュボード表示の処理をここに書く
 }
 
 // 戻るボタンの処理（Vue Router を使用）
