@@ -146,6 +146,7 @@ const favoritesStore = useFavoritesStore()
 // ルートパラメータから商品ID取得
 const route = useRoute()
 const productId = Number(route.params.id)
+console.log('productId:', productId)
 const removeFavorite = (index: number) => {
   favoritesStore.favoriteImages.splice(index, 1)
 }
@@ -159,13 +160,20 @@ const totalPriceWithTax = computed(() => {
 })
 
 // 商品データの定義
-const products = [
+interface Product {
+  id: number;
+  src: string;
+  productName: string;
+  description: string;
+  price: string;
+}
+
+const products: Product[] = [
   {
     id: 1,
     src: '/option-images/print/printo_nomi.jpg',
     productName: 'プリント',
     description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 205㎜×254㎜\nキャビネプリント 180㎜×127㎜\n手札プリント 127㎜×89㎜\n\n料金\n四切りプリント 5800 円（6380 円 税込）\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
-    // description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
     price: ''
   },
   {
@@ -177,15 +185,18 @@ const products = [
   }
 ];
 
-
-
-
-//  
 const plainProduct = computed(() => {
-  if (!productId || isNaN(productId)) return null;
-  const found = products.find(p => p.id === productId)
-  return found ? { ...found } : null
-})
+  if (!productId || isNaN(productId)) {
+    console.error('Invalid productId:', productId);
+    return null;
+  }
+  const found = products.find(p => p.id === productId);
+  if (!found) {
+    console.warn('Product not found for id:', productId);
+    return null;
+  }
+  return { ...found };
+});
 
 // 各プリントタイプの単価設定
 const prices: Record<string, number> = {
@@ -494,3 +505,4 @@ const goBack = () => {
   color: #d35400; /* オレンジ系など強調色に */
 }
 </style>
+``` 
