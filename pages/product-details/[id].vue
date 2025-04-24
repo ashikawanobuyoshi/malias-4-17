@@ -221,7 +221,7 @@ const submitOrder = async () => {
 
 const sendEmail = async (orderDetails: any) => {
   try {
-    const response = await fetch('https://api.kuroco.app/v1/orders', {
+    const response = await fetch('https://YOUR_PROJECT.kuroco.app/rcms-api/5/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
