@@ -313,6 +313,15 @@ const sendEmail = async (orderDetails: any) => {
   }
 };
 
+const showAdminDashboard = () => {
+  console.log('管理者ダッシュボードを表示します');
+  // ダッシュボードを表示する処理を記述してください
+};
+
+const user = {
+  email: 'studiomalia1@gmail.com'際のメールアドレスに置き換えてください
+};
+
 if (ADMIN_EMAILS.includes(user.email)) {
   console.log("管理者としてログインしています");
   showAdminDashboard(); // 管理者ダッシュボードを表示
@@ -505,4 +514,3 @@ const goBack = () => {
   color: #d35400; /* オレンジ系など強調色に */
 }
 </style>
-``` 
