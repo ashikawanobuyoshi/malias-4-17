@@ -98,7 +98,7 @@
             </div>
             <div>
               <label for="address">メールアドレス:</label>
-              <input type="text" id="address" v-model="address" required />
+              <input type="email" id="address" v-model="address" required />
             </div>
             <div>
               <label for="comment">備考（撮影日等）:</label>
@@ -120,12 +120,10 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { serializeJson, deserializeJson } from '@/utils/jsonUtils'
 
-// ルートとストア
 const route = useRoute()
 const favoritesStore = useFavoritesStore()
 const productId = Number(route.params.id)
 
-// 商品情報
 const products = [
   {
     id: 1,
@@ -147,7 +145,6 @@ const plainProduct = computed(() => {
   return products.find(p => p.id === productId) || null
 })
 
-// 単価設定
 const prices = {
   "四つ切": 5800,
   "六つ切": 4800,
@@ -171,7 +168,6 @@ const totalPrice = computed(() =>
 
 const totalPriceWithTax = computed(() => Math.round(totalPrice.value * (1 + TAX_RATE)))
 
-// お気に入りの復元と保存
 onMounted(() => {
   const storedFavorites = localStorage.getItem('favoriteImages')
   if (storedFavorites) {
@@ -195,17 +191,9 @@ const removeFavorite = (index: number) => {
   favoritesStore.favoriteImages.splice(index, 1)
 }
 
-// 注文フォーム
 const customerName = ref('')
 const address = ref('')
 const comment = ref('')
-
-// メール送信用
-const ADMIN_EMAILS = [
-  "studiomalia1@gmail.com",
-  "info@syashin8.com",
-  "noreply@kuroco-mail.app"
-]
 
 const submitOrder = async () => {
   const orderDetails = {
@@ -231,7 +219,7 @@ const sendEmail = async (orderDetails: any) => {
     })
 
     if (!response.ok) {
-      const errorText = await response.text(); // エラー内容をテキストで取得
+      const errorText = await response.text()
       throw new Error(`Kuroco送信失敗（${response.status}）：${errorText}`);
     }
 
@@ -240,7 +228,7 @@ const sendEmail = async (orderDetails: any) => {
     alert("注文が正常に送信されました！")
   } catch (error) {
     console.error("送信エラー:", error)
-    alert(`送信に失敗しました。もう一度お試しください。\n詳細: ${error}`); // エラー詳細をアラートに表示
+    alert(`送信に失敗しました。もう一度お試しください。\n詳細: ${error}`)
   }
 }
 
