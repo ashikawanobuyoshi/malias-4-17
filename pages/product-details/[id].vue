@@ -1,11 +1,11 @@
 <template>
   <div v-if="plainProduct">
-    <!-- ページヘッダー：右上に「戻る」ボタン -->
+    <!-- ページヘッダー -->
     <div class="page-header">
       <button class="back-button" @click="goBack">戻る</button>
     </div>
 
-    <!-- お気に入りギャラリー：ページ上部に配置 -->
+    <!-- お気に入りギャラリー -->
     <div class="favorites-gallery">
       <h3>お気に入り画像一覧</h3>
       <div v-if="favoritesStore.favoriteImages.length === 0">
@@ -19,7 +19,6 @@
         >
           <img :src="favImg.url || '/images/no-image.png'" alt="Favorite Image" />
           <div class="fav-image-name">{{ favImg.fileName }}</div>
-          <!-- プリント種類選択のドロップダウン -->
           <select v-model="favImg.selectedType">
             <option disabled value="">プリント種類を選択</option>
             <option value="四つ切">四つ切</option>
@@ -27,60 +26,45 @@
             <option value="キャビネ">キャビネ</option>
             <option value="手札">手札</option>
           </select>
-          <!-- 数量入力 -->
-          <input
-            type="number"
-            v-model.number="favImg.quantity"
-            min="0"
-            placeholder="枚数"
-          />
+          <input type="number" v-model.number="favImg.quantity" min="0" placeholder="枚数" />
+          <button @click="removeFavorite(index)" class="delete-button">削除</button>
 
-            <!-- 削除ボタン -->
-            <button @click="removeFavorite(index)" 
-            class="delete-button">削除</button>
-
-          <!-- 各お気に入り画像の受注明細（簡易表示） -->
           <div
             v-if="favImg.selectedType && favImg.quantity && favImg.quantity > 0"
             class="order-details"
           >
-            <p>
-              注文内容: <span>{{ favImg.selectedType }}</span> ×
-              <span>{{ favImg.quantity }}</span> 枚
-            </p>
-            <p>
-              金額:
-              <span>{{ calculatePrice(favImg.selectedType, favImg.quantity) }}</span>
-              円
-            </p>
+            <p>注文内容: {{ favImg.selectedType }} × {{ favImg.quantity }} 枚</p>
+            <p>金額: {{ calculatePrice(favImg.selectedType, favImg.quantity) }} 円</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 商品詳細エリア：３カラムレイアウト -->
+    <!-- 商品ページ本体 -->
     <div class="product-page">
-      <!-- 左カラム：商品画像 -->
+      <!-- 左カラム：画像 -->
       <div class="left-column">
         <img :src="plainProduct.src" alt="商品画像" />
       </div>
 
-      <!-- 中央カラム：商品情報 -->
+      <!-- 中央カラム：商品詳細 -->
       <div class="center-column">
         <h1 class="product-title">{{ plainProduct.productName }}</h1>
-        <p v-for="(line, idx) in plainProduct.description.split('\n')" :key="idx" class="desc-line">
-    {{ line }}
-  </p>
+        <p
+          v-for="(line, idx) in plainProduct.description.split('\n')"
+          :key="idx"
+          class="desc-line"
+        >
+          {{ line }}
+        </p>
         <p class="product-price">{{ plainProduct.price }}</p>
       </div>
 
-      <!-- 右カラム：受注明細と合計金額、受注フォーム -->
+      <!-- 右カラム：注文情報 -->
       <div class="right-column">
         <h2>受注明細</h2>
         <div class="order-summary">
-          <div v-if="orderItems.length === 0">
-            注文されている項目はありません。
-          </div>
+          <div v-if="orderItems.length === 0">注文されている項目はありません。</div>
           <div v-else>
             <table>
               <thead>
@@ -100,14 +84,11 @@
                 </tr>
               </tbody>
             </table>
-            <div class="total">
-              合計金額: {{ totalPrice }} 円
-            </div>
-            <div class="total-with-tax">
-              消費税込合計金額: {{ totalPriceWithTax }} 円
-           </div>
+            <div class="total">合計金額: {{ totalPrice }} 円</div>
+            <div class="total-with-tax">消費税込合計金額: {{ totalPriceWithTax }} 円</div>
           </div>
         </div>
+
         <div class="order-form">
           <h3>受注フォーム</h3>
           <form @submit.prevent="submitOrder">
@@ -129,128 +110,102 @@
       </div>
     </div>
   </div>
-  <div v-else class="not-found">
-    商品が見つかりません
-  </div>
+
+  <div v-else class="not-found">商品が見つかりません</div>
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { serializeJson, deserializeJson } from '@/utils/jsonUtils'
 
-// Pinia ストアの取得
-const favoritesStore = useFavoritesStore()
-
-// ルートパラメータから商品ID取得
+// ルートとストア
 const route = useRoute()
+const favoritesStore = useFavoritesStore()
 const productId = Number(route.params.id)
-console.log('productId:', productId)
-const removeFavorite = (index: number) => {
-  favoritesStore.favoriteImages.splice(index, 1)
-}
 
-// 消費税率
-const TAX_RATE = 0.10
-
-// 消費税込みの合計金額を計算したcomputedプロパティ
-const totalPriceWithTax = computed(() => {
-  return Math.round(totalPrice.value * (1 + TAX_RATE))
-})
-
-// 商品データの定義
-interface Product {
-  id: number;
-  src: string;
-  productName: string;
-  description: string;
-  price: string;
-}
-
-const products: Product[] = [
+// 商品情報
+const products = [
   {
     id: 1,
     src: '/option-images/print/printo_nomi.jpg',
     productName: 'プリント',
-    description: `サイズ\n四切りプリント 254㎜×305㎜\n六切りプリント 205㎜×254㎜\nキャビネプリント 180㎜×127㎜\n手札プリント 127㎜×89㎜\n\n料金\n四切りプリント 5800 円（6380 円 税込）\n六切りプリント 4800 円（5280 円 税込）\nキャビネプリント 3800 円（4180 円 税込）\n手札プリント 3500 円（3850 円 税込）`,
+    description: `サイズ\n四切り：254㎜×305㎜\n六切り：205㎜×254㎜\nキャビネ：180㎜×127㎜\n手札：127㎜×89㎜\n\n料金\n四切り：5800円（税込6380円）\n六切り：4800円（税込5280円）\nキャビネ：3800円（税込4180円）\n手札：3500円（税込3850円）`,
     price: ''
   },
   {
     id: 2,
     src: '/option-images/print/6tsugiri_3.jpg',
     productName: '六切りプリント（大きめサイズ）',
-    description: `この高品質な六切りプリントは、\n美しい仕上がりと豊かな色彩が魅力です。`,
+    description: `高品質な六切りプリントは、美しい仕上がりと豊かな色彩が魅力です。`,
     price: '4,800 円（5,280 円 税込）'
   }
-];
+]
 
 const plainProduct = computed(() => {
-  if (!productId || isNaN(productId)) {
-    console.error('Invalid productId:', productId);
-    return null;
-  }
-  const found = products.find(p => p.id === productId);
-  if (!found) {
-    console.warn('Product not found for id:', productId);
-    return null;
-  }
-  return { ...found };
-});
+  return products.find(p => p.id === productId) || null
+})
 
-// 各プリントタイプの単価設定
-const prices: Record<string, number> = {
+// 単価設定
+const prices = {
   "四つ切": 5800,
   "六つ切": 4800,
   "キャビネ": 3800,
   "手札": 3500
 }
 
-// 数量と単価で金額計算
+const TAX_RATE = 0.10
+
 const calculatePrice = (type: string, qty: number): number => {
   return prices[type] ? prices[type] * qty : 0
 }
 
-// localStorage からお気に入り画像の復元
+const orderItems = computed(() =>
+  favoritesStore.favoriteImages.filter(item => item.selectedType && item.quantity > 0)
+)
+
+const totalPrice = computed(() =>
+  orderItems.value.reduce((sum, item) => sum + calculatePrice(item.selectedType, item.quantity), 0)
+)
+
+const totalPriceWithTax = computed(() => Math.round(totalPrice.value * (1 + TAX_RATE)))
+
+// お気に入りの復元と保存
 onMounted(() => {
   const storedFavorites = localStorage.getItem('favoriteImages')
   if (storedFavorites) {
     try {
       favoritesStore.favoriteImages = deserializeJson(storedFavorites)
     } catch (error) {
-      console.error('localStorage からの復元に失敗しました:', error)
+      console.error('localStorageから復元失敗:', error)
     }
   }
 })
 
-// favoritesStore の変更を localStorage に保存
 watch(
   () => favoritesStore.favoriteImages,
   (newVal) => {
-    console.log('favoriteImages が更新されました:', newVal)
     localStorage.setItem('favoriteImages', serializeJson(newVal))
   },
   { deep: true }
 )
 
-// 受注明細用の注文項目の抽出
-const orderItems = computed(() => {
-  return favoritesStore.favoriteImages.filter((item: any) => {
-    return item.selectedType && item.quantity > 0
-  })
-})
+const removeFavorite = (index: number) => {
+  favoritesStore.favoriteImages.splice(index, 1)
+}
 
-// 全注文項目の合計金額計算
-const totalPrice = computed(() => {
-  return orderItems.value.reduce((sum: number, item: any) => {
-    return sum + calculatePrice(item.selectedType, item.quantity)
-  }, 0)
-})
-
-// 注文確定処理の修正
+// 注文フォーム
 const customerName = ref('')
 const address = ref('')
 const comment = ref('')
+
+// メール送信用
+const ADMIN_EMAILS = [
+  "studiomalia1@gmail.com",
+  "info@syashin8.com",
+  "noreply@kuroco-mail.app"
+]
 
 const submitOrder = async () => {
   const orderDetails = {
@@ -259,85 +214,39 @@ const submitOrder = async () => {
     comment: comment.value,
     items: orderItems.value,
     total: totalPrice.value,
-  };
+  }
 
-  console.log("注文内容:", orderDetails);
-  alert("注文が確定されました！");
-
-  // await sendEmail(orderDetails); // sendEmail関数の呼び出しをコメントアウト
-
-  // Kurocoへの送信処理をsendEmail関数に移動
-  await sendEmail(orderDetails);
-};
-
-// 管理者のメールアドレスを指定
-const ADMIN_EMAILS = [
-  "studiomalia1@gmail.com",
-  "info@syashin8.com",
-  "noreply@kuroco-mail.app"
-];
+  await sendEmail(orderDetails)
+}
 
 const sendEmail = async (orderDetails: any) => {
   try {
-    // 注文者と全ての管理者にメールを送信
-    const recipients = [orderDetails.address, ...ADMIN_EMAILS];
-    console.log("送信先:", recipients);
+    const response = await fetch('https://api.kuroco.app/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer YOUR_API_KEY_HERE`
+      },
+      body: JSON.stringify(orderDetails)
+    })
 
-    // Kurocoへの送信
-    try {
-      const response = await fetch('https://api.kuroco.app/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `AIzaSyDA5qDSvoqCba8k3Syxr-qpgTipDVsx75` // APIキーを環境変数から取得することを推奨
-        },
-        body: JSON.stringify(orderDetails),
-      });
-
-      if (!response.ok) {
-        throw new Error(`注文データの送信に失敗しました（ステータス: ${response.status}）`);
-      }
-
-      const data = await response.json();
-      console.log("注文内容がKurocoへ送信されました:", data);
-      alert("注文がKurocoに正常に送信されました！");
-    } catch (kurocoError) {
-      console.error("Kurocoへの注文送信エラー:", kurocoError);
-      alert("Kurocoへの注文の送信に問題が発生しました。もう一度お試しください。");
-      return; // Kurocoへの送信が失敗したら、メール送信を中止
+    if (!response.ok) {
+      throw new Error(`Kuroco送信失敗（${response.status}）`)
     }
 
+    const data = await response.json()
+    console.log("Kurocoへ送信成功:", data)
+    alert("注文が正常に送信されました！")
   } catch (error) {
-    console.error("メール送信に失敗しました:", error);
-    alert("メールの送信に問題が発生しました。もう一度お試しください。");
+    console.error("送信エラー:", error)
+    alert("送信に失敗しました。もう一度お試しください。")
   }
-};
-
-// 管理者判定用
-const isAdmin = ref(false)
-const x = ['studiomalia1@gmail.com', 'admin@example.com'] // 管理者のメールアドレス一覧
-
-const user = {
-  email: 'studiomalia1@gmail.com' // ←実際のメールアドレスに変更してください
-};
-
-x.includes(user.email) && (
-  console.log("管理者としてログインしています"),
-  isAdmin.value = true
-)
-
-const showAdminDashboard = () => {
-  console.log('管理者ダッシュボードを表示します')
-  // ダッシュボード表示の処理をここに書く
 }
 
-// 戻るボタンの処理（Vue Router を使用）
-const router = useRouter()
 const goBack = () => {
-  router.go(-1)
+  history.back()
 }
 </script>
-
 <style scoped>
 /* ページヘッダー */
 .page-header {
