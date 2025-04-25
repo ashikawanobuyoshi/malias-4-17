@@ -1,4 +1,3 @@
-
 // using Twilio SendGrid's v3 Node.js Library
 // https://github.com/sendgrid/sendgrid-nodejs
 javascript
@@ -140,6 +139,7 @@ import { useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { serializeJson, deserializeJson } from '@/utils/jsonUtils'
+import sgMail from '@sendgrid/mail';
 
 const route = useRoute()
 const favoritesStore = useFavoritesStore()
@@ -229,29 +229,28 @@ const submitOrder = async () => {
 }
 
 const sendEmail = async (orderDetails: any) => {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+  const msg = {
+    to: 'test@example.com', // 送信先メールアドレス
+    from: 'test@example.com', // 送信元メールアドレス (SendGridで認証済みのもの)
+    subject: 'ご注文ありがとうございます',
+    text: `ご注文内容:\n${JSON.stringify(orderDetails, null, 2)}`, // 注文内容をテキストで送信
+    html: `<strong>ご注文内容:</strong><pre>${JSON.stringify(orderDetails, null, 2)}</pre>`, // 注文内容をHTMLで送信
+  };
+
   try {
-    const response = await fetch('https://YOUR_PROJECT.kuroco.app/rcms-api/4/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer YOUR_API_KEY_HERE`
-      },
-      body: JSON.stringify(orderDetails)
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Kuroco送信失敗（${response.status}）：${errorText}`);
+    await sgMail.send(msg);
+    console.log('Email sent');
+    alert('注文確認メールを送信しました！');
+  } catch (error: any) {
+    console.error(error);
+    if (error.response) {
+      console.error(error.response.body);
     }
-
-    const data = await response.json()
-    console.log("Kurocoへ送信成功:", data)
-    alert("注文が正常に送信されました！")
-  } catch (error) {
-    console.error("送信エラー:", error)
-    alert(`送信に失敗しました。もう一度お試しください。\n詳細: ${error}`)
+    alert('メール送信に失敗しました。');
   }
-}
+};
 
 const goBack = () => {
   history.back()

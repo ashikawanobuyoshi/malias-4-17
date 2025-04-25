@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.10.1",
+    "@sendgrid/mail": "^8.1.5",
     "autoprefixer": "^10.4.21",
     "devalue": "^5.1.1",
+    "dotenv": "^16.5.0",
     "firebase": "^11.6.0",
     "nuxt": "^3.16.2",
     "postcss": "^8.5.3",

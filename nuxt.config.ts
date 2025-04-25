@@ -1,6 +1,7 @@
 import { defineNuxtConfig } from 'nuxt/config';
 import { resolve } from 'path';
 
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false, // サーバーサイドレンダリングを無効にする
