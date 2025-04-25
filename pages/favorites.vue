@@ -35,10 +35,10 @@
       :key="index"
       class="print-item"
     >
-      <!-- 商品明細ページへのリンク -->
-      <NuxtLink :to="getDetailUrl(img.productId)">
+      <!-- 外部商品明細ページへのリンク -->
+      <a :href="getExternalDetailUrl(img.productId)" target="_blank" rel="noopener noreferrer">
         <img :src="img.src" :style="img.style" :alt="img.description" />
-      </NuxtLink>
+      </a>
       <div class="print-description">{{ img.description }}</div>
     </div>
   </div>
@@ -53,9 +53,9 @@ import { storeToRefs } from 'pinia';
 const favoritesStore = useFavoritesStore();
 const { favoriteImages } = storeToRefs(favoritesStore);
 
-// 商品明細ページの URL を生成する関数
-const getDetailUrl = (productId: number) => {
-  return `/product-details/${productId}`
+// 外部の Kuroco 商品詳細ページのURLを生成する関数
+const getExternalDetailUrl = (productId: number) => {
+  return `https://photo-studio-malias.g.kuroco-front.app/product-details/${productId}/`;
 }
 
 // お気に入り画像を削除する関数
@@ -119,6 +119,8 @@ const removeFavorite = (index: number) => {
   border-radius: 4px;
   cursor: pointer;
 }
+
+/* print images gallery */
 .print-gallery {
   display: grid;
   grid-template-columns: repeat(5, 1fr);

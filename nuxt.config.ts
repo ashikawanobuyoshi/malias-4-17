@@ -1,7 +1,6 @@
 import { defineNuxtConfig } from 'nuxt/config';
 import { resolve } from 'path';
 
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false, // サーバーサイドレンダリングを無効にする
@@ -14,6 +13,10 @@ export default defineNuxtConfig({
       ],
     }],
   ],
+  runtimeConfig: {
+    // サーバーのみで使用する環境変数（クライアントからは見えない）
+    sendgridApiKey: process.env.SENDGRID_API_KEY,
+  },
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   vite: {
