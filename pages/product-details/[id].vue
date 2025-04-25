@@ -90,23 +90,30 @@
         </div>
 
         <div class="order-form">
-          <h3>受注フォーム</h3>
-          <form @submit.prevent="submitOrder">
-            <div>
-              <label for="customerName">お名前:</label>
-              <input type="text" id="customerName" v-model="customerName" required />
-            </div>
-            <div>
-              <label for="address">メールアドレス:</label>
-              <input type="email" id="address" v-model="address" required />
-            </div>
-            <div>
-              <label for="comment">備考（撮影日等）:</label>
-              <textarea id="comment" v-model="comment"></textarea>
-            </div>
-            <button type="submit">注文を確定する</button>
-          </form>
-        </div>
+  <h3>受注フォーム</h3>
+
+  <!-- ✅ 成功メッセージ -->
+  <div v-if="showSuccessMessage" class="success-message">
+    注文確認メールを送信しました！
+  </div>
+
+  <form @submit.prevent="submitOrder">
+    <div>
+      <label for="customerName">お名前:</label>
+      <input type="text" id="customerName" v-model="customerName" required />
+    </div>
+    <div>
+      <label for="address">メールアドレス:</label>
+      <input type="email" id="address" v-model="address" required />
+    </div>
+    <div>
+      <label for="comment">備考（撮影日等）:</label>
+      <textarea id="comment" v-model="comment"></textarea>
+    </div>
+    <button type="submit">注文を確定する</button>
+  </form>
+</div>
+
       </div>
     </div>
   </div>
@@ -194,6 +201,7 @@ const removeFavorite = (index: number) => {
 const customerName = ref('')
 const address = ref('')
 const comment = ref('')
+const showSuccessMessage = ref(false)
 
 const submitOrder = async () => {
   const orderDetails = {
@@ -204,19 +212,7 @@ const submitOrder = async () => {
     total: totalPrice.value,
   }
 
-  await sendEmail(orderDetails)
-}
-
-const sendEmail = async (orderDetails: any) => {
-  const msg = {
-    to: 'info@syashin8.com', // 送信先メールアドレス
-    from: 'test@example.com', // 送信元メールアドレス (SendGridで認証済みのもの)
-    subject: 'ご注文ありがとうございます',
-    text: `ご注文内容:\n${JSON.stringify(orderDetails, null, 2)}`, // 注文内容をテキストで送信
-    html: `<strong>ご注文内容:</strong><pre>${JSON.stringify(orderDetails, null, 2)}</pre>`, // 注文内容をHTMLで送信
-  };
-
- try {
+  try {
     const res = await fetch('/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,7 +222,10 @@ const sendEmail = async (orderDetails: any) => {
     const result = await res.json()
 
     if (res.ok) {
-      alert('注文確認メールを送信しました！')
+      showSuccessMessage.value = true
+      setTimeout(() => {
+        showSuccessMessage.value = false
+      }, 5000)
     } else {
       throw new Error(result.error || 'メール送信に失敗しました')
     }
@@ -240,6 +239,7 @@ const goBack = () => {
   history.back()
 }
 </script>
+
 
 <style scoped>
 /* スタイルは省略 */
@@ -425,4 +425,15 @@ const goBack = () => {
   margin-top: 10px;
   color: #d35400; /* オレンジ系など強調色に */
 }
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+
 </style>
