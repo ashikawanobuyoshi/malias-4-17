@@ -1,3 +1,5 @@
+// using Twilio SendGrid's v3 Node.js Library
+// https://github.com/sendgrid/sendgrid-nodejs
 import sgMail from '@sendgrid/mail';
 import { defineEventHandler, readBody, createError } from 'h3';
 import { useRuntimeConfig } from '#imports';
@@ -6,7 +8,7 @@ interface RequestBody {
   customerName: string;
   address: string;
   comment: string;
-  items: any[];
+  items: { name: string; quantity: number; price: number }[];
   total: number;
 }
 
@@ -34,12 +36,28 @@ export default defineEventHandler(async (event) => {
     const body = await readBody<RequestBody>(event);
     const { customerName, address, comment, items, total } = body;
 
+    const itemListHtml = items.map(item =>
+      `<li>${item.name} × ${item.quantity}：${item.price * item.quantity}円</li>`
+    ).join('');
+
+    const itemListText = items.map(item =>
+      `- ${item.name} × ${item.quantity}：${item.price * item.quantity}円`
+    ).join('\n');
+
     const msg = {
       to: 'info@syashin8.com',
-      from: 'test@example.com',
+      from: 'info@syashin8.com', // SendGridで認証済みのメールに変更してください
       subject: 'ご注文ありがとうございます',
-      text: `ご注文者: ${customerName}\nメール: ${address}\n備考: ${comment}\n合計金額: ${total}\n注文内容:\n${JSON.stringify(items, null, 2)}`,
-      html: `<h2>ご注文者: ${customerName}</h2><p>メール: ${address}</p><p>備考: ${comment}</p><p>合計金額: ${total}円</p><pre>${JSON.stringify(items, null, 2)}</pre>`,
+      text: `ご注文者: ${customerName}\nメール: ${address}\n備考: ${comment}\n合計金額: ${total}円\n注文内容:\n${itemListText}`,
+      html: `
+        <h2>ご注文ありがとうございます</h2>
+        <p><strong>ご注文者:</strong> ${customerName}</p>
+        <p><strong>メール:</strong> ${address}</p>
+        <p><strong>備考:</strong> ${comment}</p>
+        <p><strong>合計金額:</strong> ${total}円</p>
+        <h3>注文内容:</h3>
+        <ul>${itemListHtml}</ul>
+      `,
     };
 
     await sgMail.send(msg);
@@ -47,6 +65,11 @@ export default defineEventHandler(async (event) => {
     return { message: 'Email sent successfully' };
   } catch (error: any) {
     console.error('SendGrid Error:', error);
+    if (error.response?.body?.errors) {
+      console.error('Details:', error.response.body.errors);
+    } else {
+      console.error('Error object:', error); // エラーオブジェクト全体をログに出力
+    }
     throw createError({
       statusCode: 500,
       statusMessage: 'Failed to send email',

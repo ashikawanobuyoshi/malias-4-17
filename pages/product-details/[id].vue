@@ -119,9 +119,6 @@ import { useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { serializeJson, deserializeJson } from '@/utils/jsonUtils'
-import sgMail from '@sendgrid/mail'
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const route = useRoute()
 const favoritesStore = useFavoritesStore()
