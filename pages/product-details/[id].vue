@@ -1,23 +1,3 @@
-// using Twilio SendGrid's v3 Node.js Library
-// https://github.com/sendgrid/sendgrid-nodejs
-javascript
-const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-const msg = {
-  to: 'test@example.com', // Change to your recipient
-  from: 'test@example.com', // Change to your verified sender
-  subject: 'Sending with SendGrid is Fun',
-  text: 'and easy to do anywhere, even with Node.js',
-  html: '<strong>and easy to do anywhere, even with Node.js</strong>',
-}
-sgMail
-  .send(msg)
-  .then(() => {
-    console.log('Email sent')
-  })
-  .catch((error) => {
-    console.error(error)
-  })
 <template>
   <div v-if="plainProduct">
     <!-- ページヘッダー -->
@@ -139,7 +119,9 @@ import { useRoute } from 'vue-router'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useFavoritesStore } from '@/stores/favorites'
 import { serializeJson, deserializeJson } from '@/utils/jsonUtils'
-import sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail'
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const route = useRoute()
 const favoritesStore = useFavoritesStore()
@@ -229,10 +211,8 @@ const submitOrder = async () => {
 }
 
 const sendEmail = async (orderDetails: any) => {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
   const msg = {
-    to: 'test@example.com', // 送信先メールアドレス
+    to: 'info@syashin8.com', // 送信先メールアドレス
     from: 'test@example.com', // 送信元メールアドレス (SendGridで認証済みのもの)
     subject: 'ご注文ありがとうございます',
     text: `ご注文内容:\n${JSON.stringify(orderDetails, null, 2)}`, // 注文内容をテキストで送信
@@ -240,22 +220,27 @@ const sendEmail = async (orderDetails: any) => {
   };
 
   try {
-    await sgMail.send(msg);
-    console.log('Email sent');
-    alert('注文確認メールを送信しました！');
+    await sgMail.send(msg)
+    console.log('Email sent')
+    alert('注文確認メールを送信しました！')
   } catch (error: any) {
-    console.error(error);
+    console.error(error)
     if (error.response) {
-      console.error(error.response.body);
+      console.error(error.response.body)
     }
-    alert('メール送信に失敗しました。');
+    alert('メール送信に失敗しました。')
   }
-};
+}
 
 const goBack = () => {
   history.back()
 }
 </script>
+
+<style scoped>
+/* スタイルは省略 */
+</style>
+
 <style scoped>
 /* ページヘッダー */
 .page-header {
