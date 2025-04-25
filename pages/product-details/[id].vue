@@ -219,16 +219,23 @@ const sendEmail = async (orderDetails: any) => {
     html: `<strong>ご注文内容:</strong><pre>${JSON.stringify(orderDetails, null, 2)}</pre>`, // 注文内容をHTMLで送信
   };
 
-  try {
-    await sgMail.send(msg)
-    console.log('Email sent')
-    alert('注文確認メールを送信しました！')
-  } catch (error: any) {
-    console.error(error)
-    if (error.response) {
-      console.error(error.response.body)
+ try {
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderDetails)
+    })
+
+    const result = await res.json()
+
+    if (res.ok) {
+      alert('注文確認メールを送信しました！')
+    } else {
+      throw new Error(result.error || 'メール送信に失敗しました')
     }
-    alert('メール送信に失敗しました。')
+  } catch (err) {
+    console.error(err)
+    alert('メール送信に失敗しました')
   }
 }
 
@@ -240,6 +247,7 @@ const goBack = () => {
 <style scoped>
 /* スタイルは省略 */
 </style>
+
 
 <style scoped>
 /* ページヘッダー */
